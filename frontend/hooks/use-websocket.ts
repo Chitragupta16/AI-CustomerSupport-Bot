@@ -19,13 +19,15 @@ export function useWebSocketClient(opts: Options) {
   const [connected, setConnected] = useState(false)
 
   const resolveUrl = useCallback(() => {
-    const base = typeof window !== "undefined" ? window.location.origin : ""
-    const scheme = base.startsWith("https") ? "wss" : "ws"
-    const path = url.startsWith("ws") ? url : `${scheme}://${window.location.host}${url}`
-    const usp = new URL(path)
-    if (token) usp.searchParams.set("token", token)
-    return usp.toString()
-  }, [url, token])
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || window.location.origin;
+    const scheme = apiBase.startsWith("https") ? "wss" : "ws";
+    const base = apiBase.replace(/^http/, scheme);
+    const path = url.startsWith("/") ? `${base}${url}` : url;
+    const full = new URL(path);
+    if (token) full.searchParams.set("token", token);
+    return full.toString();
+  }, [url, token]);
+
 
   const connect = useCallback(() => {
     if (wsRef.current || connecting) return
