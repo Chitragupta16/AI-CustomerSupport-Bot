@@ -1,12 +1,13 @@
-```text
 fastapi==0.95.2
-uvicorn==0.22.0
+uvicorn[standard]==0.22.0
 google-generativeai==0.1.0
-redis==4.5.5
+aioredis==2.0.1
 faiss-cpu==1.7.4
+numpy==1.26.0
 sqlalchemy==2.0.15
+asyncpg==0.27.0
 python-multipart==0.0.6
 aiofiles==23.1.0
 sendgrid==6.11.0
 python-dotenv==1.0.0
-```
+pydantic==1.10.12
