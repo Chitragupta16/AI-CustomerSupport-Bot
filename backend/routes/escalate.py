@@ -1,29 +1,18 @@
-# backend/routes/escalate.py
 from fastapi import APIRouter, HTTPException
-from typing import List, Optional
-from models.escalation_models import EscalationTicket, TicketResponse
-from database.postgres import PostgresService
-from services.redis_service import RedisService
+from models.escalation_models import EscalationTicket
 
 router = APIRouter()
-postgres = PostgresService()
-redis = RedisService()
+tickets = []  # simple in-memory list for now
 
 
 @router.post("/")
 async def create_ticket(ticket: EscalationTicket):
-    try:
-        ticket_id = await postgres.create_ticket(ticket)
-        await redis.log_escalation(ticket.customer_email)
-        return {"ticket_id": ticket_id, "status": "created"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    t = ticket.dict()
+    t["id"] = len(tickets) + 1
+    tickets.append(t)
+    return {"ticket_id": t["id"], "status": "created"}
 
 
 @router.get("/list")
-async def list_tickets(status: Optional[str] = None):
-    try:
-        tickets = await postgres.get_tickets(status)
-        return {"tickets": tickets}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+async def list_tickets():
+    return {"tickets": tickets}
