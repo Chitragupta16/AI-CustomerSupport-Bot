@@ -1,116 +1,101 @@
 "use client"
 
-import type React from "react"
-
-import useSWR from "swr"
-import { useState, useMemo } from "react"
+import React, { useEffect, useState } from "react"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast"
 
-type Props = { token?: string }
+// 🧠 The admin panel allows viewing and managing escalation tickets
+// fetched from your FastAPI backend
 
-const useApiBase = () => useMemo(() => (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/+$/, ""), [])
-
-async function fetcher(url: string, token?: string) {
-  const res = await fetch(url, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    cache: "no-store",
-  })
-  if (!res.ok) throw new Error(`Failed to fetch ${url}`)
-  return res.json()
+type Ticket = {
+  ticket_id: string
+  customer_email: string
+  issue: string
+  status: string
+  created_at?: string
 }
 
-export default function AdminClient({ token }: Props) {
-  const apiBase = useApiBase()
+export default function AdminClient() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(false)
+  const [filter, setFilter] = useState("")
+  const { toast, show } = useToast()
 
-  const { data, error, isLoading, mutate } = useSWR([`${apiBase}/escalate/list`, token] as const, ([url, t]) =>
-    fetcher(url, t),
-  )
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-
-  async function uploadFAQ(e: React.FormEvent) {
-    e.preventDefault()
-    if (!file) return
-    setUploading(true)
+  // Fetch escalation tickets from backend
+  const fetchTickets = async () => {
+    setLoading(true)
     try {
-      const form = new FormData()
-      form.append("file", file)
-      const res = await fetch(`${apiBase}/faq/upload`, {
-        method: "POST",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: form,
-      })
-      if (!res.ok) throw new Error(await res.text())
-      toast({ title: "FAQ uploaded" })
+      const res = await fetch(`${API_BASE_URL}/escalate/list${filter ? `?status=${filter}` : ""}`)
+      if (!res.ok) throw new Error("Failed to fetch tickets")
+      const data = await res.json()
+      setTickets(data.tickets || [])
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message })
+      show(err.message || "Error fetching tickets")
     } finally {
-      setUploading(false)
+      setLoading(false)
     }
   }
 
-  return (
-    <div className="container mx-auto px-4 py-6 grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Escalated Tickets</CardTitle>
-          <CardDescription>Tickets requiring manual review</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading && <div className="text-sm text-muted-foreground">Loading...</div>}
-          {error && <div className="text-sm text-destructive">Failed to load</div>}
-          <ul className="space-y-3">
-            {Array.isArray(data) &&
-              data.map((t: any) => (
-                <li key={t.id} className="p-3 rounded-md border border-border">
-                  <div className="text-sm font-medium">{t.subject ?? `Ticket #${t.id}`}</div>
-                  <div className="text-xs text-muted-foreground">{t.created_at ?? ""}</div>
-                  <div className="mt-2 text-sm">{t.preview ?? t.message ?? ""}</div>
-                </li>
-              ))}
-            {Array.isArray(data) && data.length === 0 && (
-              <div className="text-sm text-muted-foreground">No escalations</div>
-            )}
-          </ul>
-          <div className="mt-4">
-            <Button variant="secondary" onClick={() => mutate()}>
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+  useEffect(() => {
+    fetchTickets()
+  }, [filter])
 
-      <Card>
-        <CardHeader>
-          <CardTitle>FAQ Upload</CardTitle>
-          <CardDescription>Upload a file to update bot knowledge</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={uploadFAQ} className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="faq">FAQ File</Label>
-              <Input
-                id="faq"
-                type="file"
-                accept=".txt,.md,.pdf"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-            </div>
-            <Button type="submit" disabled={!file || uploading}>
-              {uploading ? "Uploading..." : "Upload"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+
+        {/* Filter */}
+        <div className="flex items-end space-x-3">
+          <div>
+            <Label htmlFor="filter">Filter by Status</Label>
+            <Input
+              id="filter"
+              value={filter}
+              placeholder="e.g. open, closed"
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
+          <Button onClick={fetchTickets}>Refresh</Button>
+        </div>
+
+        {/* Tickets */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {tickets.map((t) => (
+            <Card key={t.ticket_id}>
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-gray-700">{t.issue}</h2>
+                <p className="text-sm text-gray-600">Customer: {t.customer_email}</p>
+                <p className="text-sm text-gray-500">Status: {t.status}</p>
+                {t.created_at && (
+                  <p className="text-xs text-gray-400">
+                    Created at: {new Date(t.created_at).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Toast notification */}
+        {toast && (
+          <div className="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+            {toast}
+          </div>
+        )}
+
+        {/* Loader */}
+        {loading && (
+          <div className="text-center text-gray-500 mt-8 animate-pulse">
+            Loading tickets...
+          </div>
+        )}
+      </div>
     </div>
   )
 }
