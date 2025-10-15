@@ -33,6 +33,7 @@ export function useWebSocketClient(opts: Options) {
     if (wsRef.current || connecting) return
     setConnecting(true)
     try {
+      console.log("🔌 Connecting to WebSocket:", resolveUrl())
       const ws = new WebSocket(resolveUrl())
       wsRef.current = ws
       ws.addEventListener("open", () => {
