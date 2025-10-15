@@ -1,11 +1,9 @@
-"use client";
-
 import dynamic from "next/dynamic";
 
-// ✅ Disable SSR for the chat page (important for WebSocket)
+// Prevent static export / force runtime rendering
 export const dynamic = "force-dynamic";
 
-// Lazy-load ChatClient only in the browser
+// Dynamically import the client-only ChatClient (no SSR)
 const ChatClient = dynamic(() => import("./chat-client"), { ssr: false });
 
 export default function ChatPage() {
