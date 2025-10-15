@@ -2,7 +2,8 @@ import os
 import httpx
 
 class GeminiService:
-    BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-latest:generateContent"
+
 
 
 
