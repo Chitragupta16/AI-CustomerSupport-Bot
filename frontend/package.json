@@ -17,6 +17,7 @@
     "tailwindcss": "4.0.0",
     "isomorphic-ws": "^5.0.0",
     "next-auth": "^4.24.5",
-    "@vercel/analytics": "^1.2.2"
+    "@vercel/analytics": "^1.2.2",
+    "tw-animate-css": "^1.0.0"
   }
 }
