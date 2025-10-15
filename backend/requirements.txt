@@ -2,7 +2,7 @@ fastapi==0.95.2
 uvicorn[standard]==0.22.0
 google-generativeai==0.1.0
 httpx==0.27.0
-aioredis==2.0.1
+redis==5.0.1
 faiss-cpu==1.7.4
 numpy==1.26.0
 sqlalchemy==2.0.15
