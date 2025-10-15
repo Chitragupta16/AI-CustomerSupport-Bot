@@ -2,48 +2,38 @@ import os
 import httpx
 
 class GeminiService:
-    BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-latest:generateContent"
-
-
-
+    BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise RuntimeError("❌ GEMINI_API_KEY is missing — please set it in Railway.")
+            raise RuntimeError("GEMINI_API_KEY missing")
 
     async def simple_response(self, message: str) -> str:
         payload = {
-            "contents": [{"role": "user", "parts": [{"text": message}]}]
+            "contents": [
+                {"role": "user", "parts": [{"text": message}]}
+            ]
         }
 
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                print("🔹 Sending Gemini API request...")
-                response = await client.post(
+                r = await client.post(
                     f"{self.BASE_URL}?key={self.api_key}",
                     json=payload
                 )
-
-            print(f"🔹 Gemini HTTP status: {response.status_code}")
-            print(f"🔹 Gemini raw response: {response.text}")
-
-            if response.status_code != 200:
-                return f"Gemini API error: {response.status_code} — {response.text}"
-
-            data = response.json()
-            text = (
-                data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [{}])[0]
-                .get("text", "No response from Gemini.")
-            )
-            return text or "No text response."
-
+                r.raise_for_status()
+                data = r.json()
+                return (
+                    data.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", "Sorry, I couldn’t process that.")
+                )
         except httpx.HTTPStatusError as e:
-            print("❌ HTTP error while calling Gemini:", e)
-            return f"Gemini API HTTP error: {e}"
-
+            # Log more detailed information if an API error occurs
+            print(f"Gemini API error: {e.response.status_code} — {e.response.text}")
+            return "Sorry, Gemini API returned an error."
         except Exception as e:
-            print("❌ Unexpected Gemini error:", e)
-            return f"Gemini API failed: {str(e)}"
+            print(f"Unexpected error calling Gemini API: {e}")
+            return "Sorry, something went wrong."
