@@ -1,11 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
+// ✅ Disable SSR for the chat page (important for WebSocket)
 export const dynamic = "force-dynamic";
 
-import { requireAuth } from "../../lib/require-auth"
-import ChatClient from "./chat-client"
+// Lazy-load ChatClient only in the browser
+const ChatClient = dynamic(() => import("./chat-client"), { ssr: false });
 
-export default async function ChatPage() {
-  const session = await requireAuth({ redirectTo: "/login?callbackUrl=/chat" })
-  return <ChatClient token={session?.accessToken as string | undefined} />
+export default function ChatPage() {
+  return <ChatClient />;
 }
