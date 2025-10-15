@@ -12,8 +12,11 @@ class GeminiService:
         payload = {
             "contents": [{"role": "user", "parts": [{"text": message}]}]
         }
+        print("Gemini response:", r.text)
+
 
         print(f"🚀 Sending to Gemini: {json.dumps(payload)}")
+        
 
         try:
             async with httpx.AsyncClient(timeout=30) as client:
