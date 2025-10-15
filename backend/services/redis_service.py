@@ -1,4 +1,6 @@
-import os, aioredis
+import os
+import redis.asyncio as redis
+
 
 class RedisService:
     def __init__(self):
