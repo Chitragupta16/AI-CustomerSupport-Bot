@@ -1,5 +1,5 @@
 const nextConfig = {
-  experimental: { reactCompiler: true },
+  experimental: {},
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: { unoptimized: true },
