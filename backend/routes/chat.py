@@ -23,7 +23,8 @@ async def chat_socket(websocket: WebSocket):
                 await redis.store_message(session_id, message.content)
 
                 response = await gemini.simple_response(message.content)
-                await websocket.send_json({"type": "assistant_chunk", "content": response})
-                await websocket.send_json({"type": "assistant_done", "content": "Stream complete"})
+                await websocket.send_json({"type": "assistant_message", "content": response})
+                await websocket.send_json({"type": "done"})
+
     except WebSocketDisconnect:
         await redis.clear_session(session_id)
