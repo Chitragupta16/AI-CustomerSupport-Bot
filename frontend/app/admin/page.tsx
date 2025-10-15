@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireAuth } from "../../lib/require-auth"
 import AdminClient from "./admin-client"
 
