@@ -1,10 +1,10 @@
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
-// Prevent static export / force runtime rendering
+// ✅ Keep this to force dynamic rendering (prevents static export issues)
 export const dynamic = "force-dynamic";
 
-// Dynamically import the client-only ChatClient (no SSR)
-const ChatClient = dynamic(() => import("./chat-client"), { ssr: false });
+// ✅ Rename the imported one to avoid conflict
+const ChatClient = dynamicImport(() => import("./chat-client"), { ssr: false });
 
 export default function ChatPage() {
   return <ChatClient />;
