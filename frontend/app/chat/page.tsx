@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireAuth } from "../../lib/require-auth"
 import ChatClient from "./chat-client"
 
